@@ -62,7 +62,7 @@ Modèle classique
 obs~1+year_as_factor Family: nbinom2  ( log )
 
 ```R
-main_abundance_variation(id = "sans_effet_nb_passage", file_data = "Essai_analyse_categorie_passage.txt", list_effects= c("annee"), as_factor_other_than_timestep=NULL, formula_random_effect= "+(1|carre) + (1|annee)", first_year = 2003,last_year=NULL, vecSp =NULL, d_species_colname = "espece",d_observed_var_colname = "nombre", d_timestep_colname = "annee", species_file_name = "library/espece.csv", dsp_species_colname = "sp",dsp_species_name_colname = "nom")
+main_abundance_variation(id = "sans_effet_nb_passage", file_data = "data.csv", list_effects= c("annee"), as_factor_other_than_timestep=NULL, formula_random_effect= "+(1|carre) + (1|annee)", first_year = 2003,last_year=NULL, vecSp =NULL, d_species_colname = "espece",d_observed_var_colname = "nombre", d_timestep_colname = "annee", species_file_name = "library/espece.csv", dsp_species_colname = "sp",dsp_species_name_colname = "nom")
 ```
 
 Modèle prenant un compte un effet du nombre de passage
@@ -70,7 +70,7 @@ Modèle prenant un compte un effet du nombre de passage
 obs~1+year+passage_as_factor Family: nbinom2  ( log )
 
 ```R
-main_abundance_variation(id="effet_nb_passage",file_data = "Essai_analyse_categorie_passage.txt", list_effects= c("annee","passage"), as_factor_other_than_timestep=c("passage"), formula_random_effect= "+(1|carre) + (1|annee)", first_year = 2003,last_year=NULL, vecSp = "PHYCOL", d_species_colname = "espece",d_observed_var_colname = "nombre", d_timestep_colname = "annee", species_file_name = "library/espece.csv", dsp_species_colname = "sp",dsp_species_name_colname = "nom")
+main_abundance_variation(id="effet_nb_passage",file_data = "data.csv", list_effects= c("annee","nb_passage"), as_factor_other_than_timestep=c("passage"), formula_random_effect= "+(1|carre) + (1|annee)", first_year = 2003,last_year=NULL, vecSp = "PHYCOL", d_species_colname = "espece",d_observed_var_colname = "nombre", d_timestep_colname = "annee", species_file_name = "library/espece.csv", dsp_species_colname = "sp",dsp_species_name_colname = "nom")
 ```
 
 

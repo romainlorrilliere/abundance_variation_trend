@@ -2,7 +2,7 @@ export/
 output/
 dataRaw/
 data_weather/
-data/
+data/*
 !data/data.csv
 SIG/
 archive/

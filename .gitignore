@@ -3,6 +3,7 @@ output/
 dataRaw/
 data_weather/
 data/
+!data/data.csv
 SIG/
 archive/
 DB_import/

@@ -400,14 +400,3 @@ abundance_variation_multisp <- function(id = NA,d,dsp=NULL,vecSp=NA,list_effects
 
 }
 
-bin <- function() {
-
-    if(class(md1)[1] != "try-error") {
-        ## test the robustness of the fit
-        smd1 <- md1[[2]]
-        smd1 <- smd1[grep("year",row.names(smd1)),]
-        sd_good <- all(smd1[,3]<3)
-    } else { cat("ERROR !!!\n")}
-
-
-

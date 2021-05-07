@@ -46,3 +46,7 @@ infoDB.txt
 #myAnalysis.r#
 *.r#
 workingLog.txt
+*.log
+comparaison_list_group.csv
+sp.txt
+tendance_groupe_comparaison.csv

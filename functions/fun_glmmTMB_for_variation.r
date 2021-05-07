@@ -81,7 +81,7 @@ vif.mer <- function (fit) {
 #'
 glmmTMB_sp <- function(data,varInterest="obs",listEffects="year",interactions=NA
                       ,formulaRandom="+(1|carre)",selSample=1e10,tagModel=""
-                      ,family="nbinom2",asfactor=NULL
+                      ,family="nbinom2",ziformula = "~1",weights =NULL ,asfactor=NULL
                       ,repout=NULL,checkRepout=TRUE,saveFig=FALSE,output=FALSE,doBeep=TRUE,printFormula=TRUE,printSummary=TRUE)
 {
 
@@ -307,8 +307,9 @@ glmmTMB_sp <- function(data,varInterest="obs",listEffects="year",interactions=NA
             pngfile <- paste0(repoutFig,"corrplot","_",tagModel,".png")
             cat("  --> [PNG]:",pngfile)
             flush.console()
+
             png(pngfile)
-            corrplot(MatCor)
+            corrplot::corrplot(MatCor)
             dev.off()
             cat("    DONE !\n")
             flush.console()
@@ -334,7 +335,13 @@ glmmTMB_sp <- function(data,varInterest="obs",listEffects="year",interactions=NA
 
         flush.console()
 
-        ModSp=glmmTMB(Formula,data=data_Scale, family=familyMod)  #37 min
+        w <- NULL
+        if(!is.null(weights)) {
+            w <- data[,weights,with=FALSE][[1]]
+
+        }
+
+        ModSp=glmmTMB(Formula,data=data_Scale, family=familyMod,ziformula = as.formula(ziformula),weights=w)  #37 min
         if(doBeep) beep()
         if(printSummary) print(summary(ModSp))
 

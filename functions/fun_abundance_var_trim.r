@@ -2,6 +2,9 @@ library(data.table)
 library(rtrim)
 library(ggplot2)
 
+## exemple :
+## main_abundance_variation_trim(id = "trend_1989_2019_trim_EMBHOR", file_data = "data_FrenchBBS_carre_trend_trim_2021-04-13_2001_2019fr.csv", list_effects= c("annee"), as_factor_other_than_timestep=NULL, formula_random_effect= "+(1|carre) + (1|annee)", first_year = NULL,last_year=NULL, vecSp = NULL, d_species_colname = "code_sp",d_observed_var_colname = "abondance", d_timestep_colname = "annee", species_file_name = "library/espece.csv", dsp_species_colname = "sp",dsp_species_name_colname = "nom", repinput = "data/", repout="output/", data_file_encoding = "Latin-1", species_file_encoding = "Latin-1", printSummary=TRUE,saveFig=TRUE, saveFigGlmm=TRUE)
+
 
 
 

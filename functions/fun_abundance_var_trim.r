@@ -239,7 +239,7 @@ abundance_variation_multisp_trim <- function(id = NA,d,dsp=NULL,vecSp=NA
 
     for(sp in listSp) {
 
-        browser()
+
 	nomSp <- dsp[id_sp == sp,sp_name]
         nomSc <- dsp[id_sp == sp,nomscientific]
 	cat("\n\n==========================\n",sp,nomSp,"\n===============================\n\n")
@@ -286,7 +286,7 @@ abundance_variation_multisp_trim <- function(id = NA,d,dsp=NULL,vecSp=NA
 
             cat( "\n--> nouveau model\nmodel =",val_model," changepoints =",val_changepoints,"\nserialcor =",val_serialcor," overdisp =", val_overdisp,"\n")
 
-            fit <- trim(obs ~ carre + year + etude, data = data_sp, model = val_model, changepoints = val_changepoints, serialcor = val_serialcor, overdisp = val_overdisp)
+            fit <- trim(obs ~ carre + year , data = data_sp, model = val_model, changepoints = val_changepoints, serialcor = val_serialcor, overdisp = val_overdisp)
 
 
 

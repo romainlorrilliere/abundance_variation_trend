@@ -1,0 +1,242 @@
+---
+title: "Tendances et variation d'abondance avec glmmTMB"
+author: "RL"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message = FALSE,warning = FALSE,error = FALSE)
+```
+
+
+
+```{r package}
+
+library(data.table)
+library(glmmTMB)
+library(DHARMa)
+library(ggplot2)
+library(ggeffects)
+```
+
+# Les données
+
+```{r data}
+
+d <- fread("C:/git/abundance_variation_trend/data/data_FrenchBBS_carre_trend_2021-02-24_2001_2019fr.csv")
+
+``` 
+
+# Préparation des données 
+
+pour l'exemple on ne conserve que les colonne nécessaire et les données du Rougegorge des Pays de Loire
+
+```{r prepare}
+
+d <- d[code_sp == "ERIRUB" & departement %in% c(44,85,49,72,53),.(carre,annee,code_sp,abondance)]
+
+```
+
+puis on centre et réduit l'année dans un nouvelle variable annee_sc et on creer un autre annee_txt où l'année est en facteur
+
+```{r new_col}
+
+d[,`:=`(annee_sc = scale(annee), annee_txt = as.factor(annee))]
+
+```
+
+
+# Les modèles
+
+## Les variations temporelles
+
+pour les variations temporelles on utilise un modèle avec les années en facteur 
+
+```{r vartemp}
+
+md1 <- glmmTMB(abondance ~ annee_txt + (1|carre),data = d , family = "nbinom2",ziformula = ~1)
+smd1 <- summary(md1)
+print(smd1)
+
+```
+Vérification de l'ajustement
+
+```{r vartemp_ajust}
+
+simulationOutput <- simulateResiduals(fittedModel = md1, plot = F)
+testZeroInflation(simulationOutput)
+plot(simulationOutput)
+```
+
+
+On récupère les coefficients pour chaque années et les intervales de confiances avec la fonction "confint". 
+
+Il ne faut pas oublier de mettre les estimates et IC à l'exponentiel
+
+
+```{r coef_an}
+
+tab_var_abond=as.data.frame(coef(summary(md1))$cond)
+term <- row.names(tab_var_abond)
+tab_var_abond=cbind(term=term,tab_var_abond)
+  
+	#colnames(forBackTransform) <- c("term","bt_mean","bt_sd")
+	#forBackTransform$bt_sd <- as.numeric(as.character(forBackTransform$bt_sd))
+	#forBackTransform$bt_mean <- as.numeric(as.character(forBackTransform$bt_mean))
+
+	#tab_var_abond <- merge(tab_var_abond,forBackTransform,by="term",all.x=TRUE)
+setDT(tab_var_abond)
+
+# les intervalles de confiances
+mdIC <- as.data.frame(confint(md1)[,1:2])
+colnames(mdIC) <- c("ICinf","ICsup")
+mdIC <- cbind(term = gsub("cond.","",rownames(mdIC)),mdIC)
+
+tab_var_abond <- merge(tab_var_abond,mdIC,by="term",all.x=TRUE)
+tab_var_abond[,`:=`(abondance_var = exp(Estimate),ICinf = exp(ICinf),ICsup = exp(ICsup),annee =gsub("annee_txt","",term))]
+setnames(tab_var_abond,"Pr(>|z|)","p_val")
+tab_var_abond <- tab_var_abond[,.(annee,abondance_var,ICinf,ICsup,p_val)]
+tab_var_abond[1,`:=`(annee = min(d$annee),ICinf = ICinf / abondance_var, ICsup = ICsup /  abondance_var ,p_val=0)]
+tab_var_abond[1,abondance_var := 1]
+tab_var_abond[,annee :=as.numeric(as.character(annee))]
+print(tab_var_abond)
+
+
+
+```
+
+Pour information on pourrait aussi utiliser la fonction "ggpredict" du package "ggeffects"
+
+
+```{r ggpredict}
+
+ggpred <- ggpredict(md1,terms = c("annee_txt"))
+print(ggpred)
+plot(ggpred)
+
+```
+
+Les valeurs issuent de ggpred doivent être modifiées pour commencer la série temporelle à 1
+
+```{r d_pred}
+
+ref <- ggpred$predicted[1] 
+d_pred <- data.frame(annee = ggpred$x,abondance_var = ggpred$predicted / ref, ICinf = ggpred$conf.low/ref , ICsup = ggpred$conf.high/ref)
+print(d_pred)
+
+``` 
+## la tendance 
+
+Ici nous allons calculer la tendance sur l'ensemble de la série temporelle. Si on voulait calculer la tendance que sur les dix dernières années on ne conserverait que les dix dernières années dans le jeu de données. 
+
+Pour calculer les tendances on utilise le même modèle, cette fois ci, avec la variable année en numérique. 
+
+Les années étant une variable numérique nous utiliserons la variable centrée-réduite des années "annee_sc"
+
+Pour information ce n'est pas indispensable de le faire quand il n'y a comme ici qu'une variable quantitative. Mais je le fais pour l'exemple. 
+
+
+
+```{r trend}
+
+md2 <- glmmTMB(abondance ~ annee_sc + (1|carre),data = d , family = "nbinom2",ziformula = ~1)
+smd2 <- summary(md2)
+print(smd2)
+
+```
+
+Vérification de l'ajustement
+
+```{r trend_ajust}
+
+simulationOutput <- simulateResiduals(fittedModel = md2, plot = F)
+testZeroInflation(simulationOutput)
+plot(simulationOutput)
+```
+
+
+
+On récupère les coefficients pour chaque années et les intervales de confiances avec la fonction "confint". 
+
+Il ne faut pas oublier de mettre les estimates et IC à l'exponentiel et de les décentré et dé-réduire (s'il la variable a été centrée et réduite). 
+
+
+```{r tab_trend}
+
+tab_trend_raw <- as.data.frame(coef(summary(md2))$cond)
+trend_raw <- tab_trend_raw[2,1]
+
+mean_year <- mean(d[,annee])
+sd_year <- sd(d[,annee])
+
+trend <- exp(trend_raw)^(1/sd_year)
+
+
+mdIC <- as.data.frame(confint(md2)[,1:2])
+colnames(mdIC) <- c("ICinf","ICsup")
+IC_inf_raw <- mdIC$ICinf[2]
+IC_sup_raw <- mdIC$ICsup[2]
+IC_inf <- exp(IC_inf_raw)^(1/sd_year)
+IC_sup <- exp(IC_sup_raw)^(1/sd_year)
+
+tab_trend <- data.frame(nb_year = length(unique(d[,annee])), first_year = min(d[,annee]), last_year = max(d[,annee]), trend, IC_inf ,IC_sup,p_val=tab_trend_raw[2,4])
+setDT(tab_trend)
+#print(tab_trend)
+
+```
+
+
+
+
+
+Pour finir on complète la table avec un pourcentage de variation sur la période et les catégorie EBCC de tendance 
+
+
+
+```{r fun_ebcc}
+
+## renvoie la categorie EBCC de la tendance en fonction
+## trend l'estimateur de la tendance
+## pVal la p value
+## ICinf ICsup l intervalle de confiance a 95 pourcent
+affectCatEBCC <- function(trend,pVal,ICinf,ICsup){
+
+    catEBCC <- ifelse(pVal>0.05,
+               ifelse(ICinf < 0.95 | ICsup > 1.05,"Incertain","Stable"),
+               ifelse(trend<1,
+               ifelse(ICsup<0.95,"Fort déclin","Déclin modéré"),
+               ifelse(ICinf>1.05,"Forte augmentation","Augmentation modée")))
+    return(catEBCC)
+}
+
+```
+
+
+```{r tab_trend_summary}
+
+duration <- length(unique(d[,annee]))-1
+
+tab_trend[,`:=`(pourcentage_var = round(((trend^duration) -1)*100,2),
+                pourcentage_IC_inf = round(((IC_inf^duration) -1)*100,2),
+                pourcentage_IC_sup = round(((IC_sup^duration) -1)*100,2),
+                catEBCC = affectCatEBCC(trend = trend,pVal = p_val,ICinf=IC_inf,ICsup=IC_sup))]
+
+print(tab_trend)
+```
+
+# La figure
+
+On utilise ggplot pour représenter cette variation d'abondance
+
+
+```{r fig}
+
+gg <- ggplot(data = tab_var_abond, mapping=aes(x=annee, y=abondance_var))
+gg <- gg + geom_line()
+gg <- gg + geom_pointrange(aes(ymin = ICinf, ymax=ICsup))
+gg <- gg + labs(y="Variation d'abondance",x="Années")
+print(gg)
+
+
+```

@@ -11,15 +11,15 @@ affectCatEBCC <- function(trend,pVal,ICinf,ICsup){
     catEBCC <- ifelse(pVal>0.05,
                ifelse(ICinf < 0.95 | ICsup > 1.05,"Incertain","Stable"),
                ifelse(trend<1,
-               ifelse(ICsup<0.95,"Fort déclin","Déclin modéré"),
-               ifelse(ICinf>1.05,"Forte augmentation","Augmentation modée")))
+               ifelse(ICsup<0.95,"Fort dÃ©clin","DÃ©clin modÃ©rÃ©"),
+               ifelse(ICinf>1.05,"Forte augmentation","Augmentation modÃ©e")))
     return(catEBCC)
 }
 
 
 
 
-## Calcul du VIF (adapté à glmmTMB, sinon il faut adapter v et nam)
+## Calcul du VIF (adaptÃ© Ã  glmmTMB, sinon il faut adapter v et nam)
 ## adapted from rms::vif
 vif.mer <- function (fit) {
     ## Variance-Covariance Matrix
